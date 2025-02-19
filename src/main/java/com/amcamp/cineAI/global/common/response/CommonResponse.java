@@ -1,4 +1,4 @@
-package com.amcamp.seven.global.common.response;
+package com.amcamp.cineAI.global.common.response;
 
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;

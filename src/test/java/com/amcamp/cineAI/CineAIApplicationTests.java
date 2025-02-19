@@ -1,10 +1,10 @@
-package com.amcamp.seven;
+package com.amcamp.cineAI;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class SevenApplicationTests {
+class CineAIApplicationTests {
 
     @Test
     void contextLoads() {}

@@ -1,4 +1,4 @@
-package com.amcamp.seven.global.common.response;
+package com.amcamp.cineAI.global.common.response;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.MethodParameter;
