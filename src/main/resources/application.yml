@@ -12,3 +12,8 @@ management:
   endpoint:
     health:
       access: unrestricted
+
+spring:
+  redis:
+    host: localhost
+    port: 6379
