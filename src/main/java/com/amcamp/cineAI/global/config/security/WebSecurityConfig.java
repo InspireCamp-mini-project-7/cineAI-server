@@ -1,4 +1,4 @@
-package com.amcamp.seven.global.config.security;
+package com.amcamp.cineAI.global.config.security;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
