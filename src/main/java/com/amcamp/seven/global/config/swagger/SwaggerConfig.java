@@ -1,4 +1,4 @@
-package com.amcamp.seven.infra.config;
+package com.amcamp.seven.global.config.swagger;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
