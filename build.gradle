@@ -73,7 +73,13 @@ tasks.register('updateGitHooks', Copy) {
 }
 
 tasks.register('makeGitHooksExecutable', Exec) {
-	commandLine 'chmod', '+x', './.git/hooks/pre-commit'
+	if (System.getProperty("os.name").toLowerCase().contains('win')) {
+		// Windows에서는 icacls 실행
+		commandLine 'cmd', '/c', 'icacls', '.git\\hooks\\pre-commit', '/grant', 'Everyone:(R,W)'
+	} else {
+		// Linux/macOS에서는 chmod 실행
+		commandLine 'chmod', '+x', './.git/hooks/pre-commit'
+	}
 	dependsOn updateGitHooks
 }
 
