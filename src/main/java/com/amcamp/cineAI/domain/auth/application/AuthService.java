@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-    private final MemberRepository userRepository;
+    private final MemberRepository memberRepository;
     private final KakaoService kakaoService;
 
     public SocialLoginResponse oAuthLogin(AuthCodeRequest authCodeRequest) {
@@ -25,7 +25,7 @@ public class AuthService {
 
         // 획득한 정보로 회원 상태 확인, 없으면 가입, 있으면 토큰값만 반환
         Member member =
-                userRepository.findByEmail(email).orElseGet(() -> saveMember(memberInfoResponse));
+                memberRepository.findByEmail(email).orElseGet(() -> saveMember(memberInfoResponse));
 
         if (member.getStatus() == MemberStatus.DELETED) {
             member.reEnroll();
@@ -39,7 +39,7 @@ public class AuthService {
                         memberInfoResponse.nickName(),
                         memberInfoResponse.profileImageUrl(),
                         memberInfoResponse.email());
-        userRepository.save(user);
+        memberRepository.save(user);
         return user;
     }
 }
