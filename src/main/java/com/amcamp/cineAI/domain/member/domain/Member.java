@@ -62,4 +62,8 @@ public class Member {
         }
         this.status = MemberStatus.DELETED;
     }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
 }

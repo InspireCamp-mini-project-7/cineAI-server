@@ -2,7 +2,9 @@ package com.amcamp.cineAI.domain.member.application;
 
 import com.amcamp.cineAI.domain.auth.dao.RefreshTokenRepository;
 import com.amcamp.cineAI.domain.auth.domain.RefreshToken;
+import com.amcamp.cineAI.domain.member.dao.MemberRepository;
 import com.amcamp.cineAI.domain.member.domain.Member;
+import com.amcamp.cineAI.domain.member.dto.request.MemberEditRequest;
 import com.amcamp.cineAI.domain.member.dto.response.MemberInfoResponse;
 import com.amcamp.cineAI.global.util.MemberUtil;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class MemberService {
     private final MemberUtil memberUtil;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final MemberRepository memberRepository;
 
     public void logoutMember() {
         Member currentMember = memberUtil.getCurrentMember();
@@ -34,6 +37,12 @@ public class MemberService {
     @Transactional(readOnly = true)
     public MemberInfoResponse getMemberInfo() {
         Member currentMember = memberUtil.getCurrentMember();
+        return MemberInfoResponse.of(currentMember);
+    }
+
+    public MemberInfoResponse editMemberInfo(MemberEditRequest memberEditRequest) {
+        Member currentMember = memberUtil.getCurrentMember();
+        currentMember.updateNickname(memberEditRequest.nickname());
         return MemberInfoResponse.of(currentMember);
     }
 }

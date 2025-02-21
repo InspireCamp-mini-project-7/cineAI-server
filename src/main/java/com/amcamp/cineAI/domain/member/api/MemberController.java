@@ -1,9 +1,11 @@
 package com.amcamp.cineAI.domain.member.api;
 
 import com.amcamp.cineAI.domain.member.application.MemberService;
+import com.amcamp.cineAI.domain.member.dto.request.MemberEditRequest;
 import com.amcamp.cineAI.domain.member.dto.response.MemberInfoResponse;
 import com.amcamp.cineAI.global.util.CookieUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,5 +34,12 @@ public class MemberController {
     @GetMapping("/me")
     public MemberInfoResponse memberInfo() {
         return memberService.getMemberInfo();
+    }
+
+    @PatchMapping("/me/edit")
+    public ResponseEntity<Void> memberEdit(
+            @Valid @RequestBody MemberEditRequest memberEditRequest) {
+        memberService.editMemberInfo(memberEditRequest);
+        return ResponseEntity.ok().build();
     }
 }
