@@ -5,7 +5,7 @@ import static com.amcamp.cineAI.global.common.constants.SecurityConstants.KAKAO_
 
 import com.amcamp.cineAI.domain.auth.dto.response.KakaoTokenResponseDto;
 import com.amcamp.cineAI.domain.auth.dto.response.KakaoUserInfoResponseDto;
-import com.amcamp.cineAI.domain.auth.dto.response.MemberInfoResponse;
+import com.amcamp.cineAI.domain.auth.dto.response.ProfileInfoResponse;
 import com.amcamp.cineAI.domain.auth.dto.response.SocialLoginResponse;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import lombok.RequiredArgsConstructor;
@@ -54,7 +54,7 @@ public class KakaoService {
                 kakaoTokenResponseDto.getAccessToken(), kakaoTokenResponseDto.getRefreshToken());
     }
 
-    public MemberInfoResponse getMemberInfo(String accessToken) {
+    public ProfileInfoResponse getProfileInfo(String accessToken) {
 
         KakaoUserInfoResponseDto userInfo =
                 WebClient.create(KAKAO_USER_URL)
@@ -80,9 +80,6 @@ public class KakaoService {
                         .bodyToMono(KakaoUserInfoResponseDto.class)
                         .block();
 
-        return MemberInfoResponse.of(
-                userInfo.getKakaoAccount().getProfile().nickName,
-                userInfo.getKakaoAccount().getProfile().profileImageUrl,
-                userInfo.getKakaoAccount().email);
+        return ProfileInfoResponse.of(userInfo);
     }
 }
