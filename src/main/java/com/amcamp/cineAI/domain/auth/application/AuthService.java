@@ -1,7 +1,7 @@
 package com.amcamp.cineAI.domain.auth.application;
 
 import com.amcamp.cineAI.domain.auth.dto.request.AuthCodeRequest;
-import com.amcamp.cineAI.domain.auth.dto.response.MemberInfoResponse;
+import com.amcamp.cineAI.domain.auth.dto.response.ProfileInfoResponse;
 import com.amcamp.cineAI.domain.auth.dto.response.SocialLoginResponse;
 import com.amcamp.cineAI.domain.member.dao.MemberRepository;
 import com.amcamp.cineAI.domain.member.domain.Member;
@@ -24,12 +24,14 @@ public class AuthService {
         // 카카오 또는 구글로부터 코드값으로 토큰값 반환 - 토큰으로 유저 정보 획득
         SocialLoginResponse response = kakaoService.getSocialLoginResponse(authCodeRequest.code());
         String accessToken = response.accessToken();
-        MemberInfoResponse memberInfoResponse = kakaoService.getMemberInfo(accessToken);
-        String email = memberInfoResponse.email();
+        ProfileInfoResponse profileInfoResponse = kakaoService.getProfileInfo(accessToken);
+        String email = profileInfoResponse.email();
 
         // 획득한 정보로 회원 상태 확인, 없으면 가입, 있으면 토큰값만 반환
         Member member =
-                memberRepository.findByEmail(email).orElseGet(() -> saveMember(memberInfoResponse));
+                memberRepository
+                        .findByEmail(email)
+                        .orElseGet(() -> saveMember(profileInfoResponse));
 
         if (member.getStatus() == MemberStatus.DELETED) {
             member.reEnroll();
@@ -37,12 +39,12 @@ public class AuthService {
         return response;
     }
 
-    private Member saveMember(MemberInfoResponse memberInfoResponse) {
+    private Member saveMember(ProfileInfoResponse profileInfoResponse) {
         Member user =
                 Member.createMember(
-                        memberInfoResponse.nickName(),
-                        memberInfoResponse.profileImageUrl(),
-                        memberInfoResponse.email());
+                        profileInfoResponse.nickName(),
+                        profileInfoResponse.profileImageUrl(),
+                        profileInfoResponse.email());
         memberRepository.save(user);
         return user;
     }

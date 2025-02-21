@@ -30,6 +30,13 @@ public class MemberUtil {
     private Long getCurrentMemberId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
+        if (authentication == null) {
+            System.out.println("authentication is null");
+        } else {
+            System.out.println("authentication: " + authentication);
+            System.out.println("authentication.getPrincipal(): " + authentication.getPrincipal());
+        }
+
         try {
             return Long.parseLong(authentication.getName());
         } catch (Exception e) {
