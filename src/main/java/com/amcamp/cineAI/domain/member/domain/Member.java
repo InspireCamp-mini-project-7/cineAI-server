@@ -1,5 +1,7 @@
 package com.amcamp.cineAI.domain.member.domain;
 
+import com.amcamp.cineAI.global.error.exception.CustomException;
+import com.amcamp.cineAI.global.error.exception.ErrorCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -52,5 +54,16 @@ public class Member {
 
     public void reEnroll() {
         this.status = MemberStatus.NORMAL;
+    }
+
+    public void withdrawal() {
+        if (this.status == MemberStatus.DELETED) {
+            throw new CustomException(ErrorCode.MEMBER_ALREADY_DELETED);
+        }
+        this.status = MemberStatus.DELETED;
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
     }
 }
