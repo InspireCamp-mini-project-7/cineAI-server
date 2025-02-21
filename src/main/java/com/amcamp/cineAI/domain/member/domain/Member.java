@@ -1,4 +1,4 @@
-package com.amcamp.cineAI.domain.user.domain;
+package com.amcamp.cineAI.domain.member.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;

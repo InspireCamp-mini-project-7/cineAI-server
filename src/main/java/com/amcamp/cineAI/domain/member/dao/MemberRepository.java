@@ -1,6 +1,6 @@
-package com.amcamp.cineAI.domain.user.dao;
+package com.amcamp.cineAI.domain.member.dao;
 
-import com.amcamp.cineAI.domain.user.domain.Member;
+import com.amcamp.cineAI.domain.member.domain.Member;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
