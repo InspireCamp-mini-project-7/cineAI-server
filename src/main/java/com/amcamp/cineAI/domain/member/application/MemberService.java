@@ -1,5 +1,7 @@
 package com.amcamp.cineAI.domain.member.application;
 
+import com.amcamp.cineAI.domain.auth.dao.RefreshTokenRepository;
+import com.amcamp.cineAI.domain.auth.domain.RefreshToken;
 import com.amcamp.cineAI.domain.member.domain.Member;
 import com.amcamp.cineAI.domain.member.dto.response.MemberInfoResponse;
 import com.amcamp.cineAI.global.util.MemberUtil;
@@ -12,6 +14,13 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class MemberService {
     private final MemberUtil memberUtil;
+    private final RefreshTokenRepository refreshTokenRepository;
+
+    public void logoutMember() {
+        Member currentMember = memberUtil.getCurrentMember();
+        RefreshToken refreshToken = refreshTokenRepository.findByMemberId(currentMember.getId());
+        refreshTokenRepository.delete(refreshToken);
+    }
 
     @Transactional(readOnly = true)
     public MemberInfoResponse getMemberInfo() {

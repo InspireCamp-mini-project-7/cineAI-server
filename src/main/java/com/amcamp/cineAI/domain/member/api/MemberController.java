@@ -5,7 +5,9 @@ import com.amcamp.cineAI.domain.member.dto.response.MemberInfoResponse;
 import com.amcamp.cineAI.global.util.CookieUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,6 +19,12 @@ public class MemberController {
 
     private final CookieUtil cookieUtil;
     private final MemberService memberService;
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> memberLogout() {
+        memberService.logoutMember();
+        return ResponseEntity.ok().headers(cookieUtil.deleteRefreshTokenCookie()).build();
+    }
 
     @GetMapping("/me")
     public MemberInfoResponse memberInfo() {
