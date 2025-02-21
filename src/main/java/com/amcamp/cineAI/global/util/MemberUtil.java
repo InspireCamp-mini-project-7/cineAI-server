@@ -1,19 +1,20 @@
 package com.amcamp.cineAI.global.util;
 
+import com.amcamp.cineAI.domain.auth.dao.RefreshTokenRepository;
 import com.amcamp.cineAI.domain.member.dao.MemberRepository;
 import com.amcamp.cineAI.domain.member.domain.Member;
 import com.amcamp.cineAI.domain.member.domain.MemberStatus;
 import com.amcamp.cineAI.global.error.exception.CustomException;
 import com.amcamp.cineAI.global.error.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class MemberUtil {
     private final MemberRepository memberRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final CookieUtil cookieUtil;
 
     public Member getCurrentMember() {
         Member member =
@@ -28,19 +29,8 @@ public class MemberUtil {
     }
 
     private Long getCurrentMemberId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null) {
-            System.out.println("authentication is null");
-        } else {
-            System.out.println("authentication: " + authentication);
-            System.out.println("authentication.getPrincipal(): " + authentication.getPrincipal());
-        }
-
-        try {
-            return Long.parseLong(authentication.getName());
-        } catch (Exception e) {
-            throw new CustomException(ErrorCode.AUTH_NOT_FOUND);
-        }
+        String token = cookieUtil.getRefreshTokenFromCookie();
+        Long currentMemberId = refreshTokenRepository.findByToken(token).getMemberId();
+        return currentMemberId;
     }
 }

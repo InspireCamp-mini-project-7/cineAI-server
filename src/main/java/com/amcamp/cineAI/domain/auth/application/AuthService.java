@@ -1,5 +1,7 @@
 package com.amcamp.cineAI.domain.auth.application;
 
+import com.amcamp.cineAI.domain.auth.dao.RefreshTokenRepository;
+import com.amcamp.cineAI.domain.auth.domain.RefreshToken;
 import com.amcamp.cineAI.domain.auth.dto.request.AuthCodeRequest;
 import com.amcamp.cineAI.domain.auth.dto.response.ProfileInfoResponse;
 import com.amcamp.cineAI.domain.auth.dto.response.SocialLoginResponse;
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class AuthService {
     private final MemberRepository memberRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final KakaoService kakaoService;
 
     public SocialLoginResponse oAuthLogin(AuthCodeRequest authCodeRequest) {
@@ -36,6 +39,12 @@ public class AuthService {
         if (member.getStatus() == MemberStatus.DELETED) {
             member.reEnroll();
         }
+
+        // RefreshToken은 redis에서 관리
+        RefreshToken refreshToken =
+                RefreshToken.createRefreshToken(member.getId(), response.refreshToken());
+        refreshTokenRepository.save(refreshToken);
+
         return response;
     }
 
