@@ -6,10 +6,7 @@ import com.amcamp.cineAI.global.util.CookieUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "회원 API", description = "회원 관련 API입니다.")
 @RestController
@@ -19,6 +16,12 @@ public class MemberController {
 
     private final CookieUtil cookieUtil;
     private final MemberService memberService;
+
+    @DeleteMapping("/withdrawal")
+    public ResponseEntity<Void> memberWithdrawal() {
+        memberService.withdrawalMember();
+        return ResponseEntity.ok().headers(cookieUtil.deleteRefreshTokenCookie()).build();
+    }
 
     @PostMapping("/logout")
     public ResponseEntity<Void> memberLogout() {

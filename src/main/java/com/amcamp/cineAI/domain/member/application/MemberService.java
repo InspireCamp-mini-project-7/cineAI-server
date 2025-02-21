@@ -22,6 +22,15 @@ public class MemberService {
         refreshTokenRepository.delete(refreshToken);
     }
 
+    public void withdrawalMember() {
+        Member currentMember = memberUtil.getCurrentMember();
+        refreshTokenRepository
+                .findById(currentMember.getId())
+                .ifPresent(refreshTokenRepository::delete);
+
+        currentMember.withdrawal();
+    }
+
     @Transactional(readOnly = true)
     public MemberInfoResponse getMemberInfo() {
         Member currentMember = memberUtil.getCurrentMember();
