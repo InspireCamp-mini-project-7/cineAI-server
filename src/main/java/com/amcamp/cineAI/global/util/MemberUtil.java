@@ -21,7 +21,6 @@ public class MemberUtil {
                 memberRepository
                         .findById(getCurrentMemberId())
                         .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
-
         if (member.getStatus() == MemberStatus.DELETED) {
             throw new CustomException(ErrorCode.MEMBER_ALREADY_DELETED);
         }
