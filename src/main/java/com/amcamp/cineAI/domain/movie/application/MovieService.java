@@ -1,6 +1,7 @@
 package com.amcamp.cineAI.domain.movie.application;
 
 import com.amcamp.cineAI.domain.member.domain.Member;
+import com.amcamp.cineAI.domain.movie.MovieConstants;
 import com.amcamp.cineAI.domain.movie.dao.MoviePreferenceRepository;
 import com.amcamp.cineAI.domain.movie.dao.MovieRepository;
 import com.amcamp.cineAI.domain.movie.domain.Movie;
@@ -12,6 +13,8 @@ import com.amcamp.cineAI.domain.movie.dto.response.MovieInfoResponse;
 import com.amcamp.cineAI.global.error.exception.CustomException;
 import com.amcamp.cineAI.global.error.exception.ErrorCode;
 import com.amcamp.cineAI.global.util.MemberUtil;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -44,11 +47,17 @@ public class MovieService {
         return MovieInfoResponse.of(movie);
     }
 
-    //    @Transactional(readOnly = true)
-    //    public List<BasicMovieInfoResponse> getMovieInitInfo() {
-    //        // 영화 제목 넣어놓고 돌려가면서 movieRepository에서 조회
-    //        // BasicMovieInfoResposne 엮은 리스트로 만들어서 반환
-    //    }
+    @Transactional(readOnly = true)
+    public List<BasicMovieInfoResponse> getMovieInitInfo(int size) {
+        List<String> movieTitleList = MovieConstants.getRandomMovies(size);
+        List<Movie> movieList = getMoviesByTitles(movieTitleList);
+        List<BasicMovieInfoResponse> result = new ArrayList<>();
+        for (Movie movie : movieList) {
+            result.add(BasicMovieInfoResponse.of(movie));
+        }
+        return result;
+    }
+
     public void updateMovieLikedStatus(Long movieId) {
         Movie movie =
                 movieRepository
@@ -65,5 +74,16 @@ public class MovieService {
             moviePreferenceRepository.save(
                     MoviePreference.createMoviePreference(member, movie, MovieLikedStatus.LIKED));
         }
+    }
+
+    private List<Movie> getMoviesByTitles(List<String> movieTitles) {
+        List<Movie> movies = new ArrayList<>();
+        for (String title : movieTitles) {
+            Movie movie = movieRepository.findByTitle(title);
+            if (movie != null) {
+                movies.add(movie);
+            }
+        }
+        return movies;
     }
 }

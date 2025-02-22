@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
@@ -44,12 +45,13 @@ public class MovieController {
         return movieService.getMovieInfo(movieId);
     }
 
-    //    @Operation(summary = "초기 설정: 영화 시청 반응 추가 대상 영화 조회", description = "사용자에게 초기 설정을 위한 영화 목록을
-    // 제공합니다")
-    //    @GetMapping ("/init")
-    //    public List<BasicMovieInfoResponse> movieInit (){
-    //        return movieService.getMovieInitInfo();
-    //    }
+    @Operation(
+            summary = "초기 설정: 영화 시청 반응 추가 대상 영화 조회",
+            description = "사용자에게 초기 설정을 위한 영화 목록을 제공합니다")
+    @GetMapping("/init")
+    public List<BasicMovieInfoResponse> movieInit(@RequestParam(required = false) int size) {
+        return movieService.getMovieInitInfo(size);
+    }
 
     @Operation(summary = "관심 있는 영화 반응 업데이트 ", description = "사용자가 관심을 표시한 영화 반응을 업데이트합니다")
     @PatchMapping("/liked")
