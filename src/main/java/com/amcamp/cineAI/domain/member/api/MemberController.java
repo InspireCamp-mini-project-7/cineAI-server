@@ -47,4 +47,14 @@ public class MemberController {
         memberService.editMemberInfo(memberEditRequest);
         return ResponseEntity.ok().build();
     }
+
+    @Operation(summary = "관리자 로그인", description = "관리자용 비밀번호를 입력받아 관리자 로그인을 진행합니다.")
+    @PostMapping("/admin-login")
+    public ResponseEntity<String> adminLogin(@RequestParam String password) {
+        if ("admin1234".equals(password)) {
+            return ResponseEntity.ok("로그인 성공");
+        } else {
+            return ResponseEntity.status(401).body("비밀번호가 잘못되었습니다.");
+        }
+    }
 }
