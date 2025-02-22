@@ -45,4 +45,9 @@ public class MemberService {
         currentMember.updateNickname(memberEditRequest.nickname());
         return MemberInfoResponse.of(currentMember);
     }
+
+    //    @Transactional(readOnly = true)
+    //    public Slice<BasicMovieInfoResponse> getMemberLikedMovie(Long lastMovieId, int pageSize) {
+    //
+    //    }
 }

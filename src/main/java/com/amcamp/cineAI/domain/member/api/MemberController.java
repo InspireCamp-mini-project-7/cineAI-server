@@ -3,11 +3,14 @@ package com.amcamp.cineAI.domain.member.api;
 import com.amcamp.cineAI.domain.member.application.MemberService;
 import com.amcamp.cineAI.domain.member.dto.request.MemberEditRequest;
 import com.amcamp.cineAI.domain.member.dto.response.MemberInfoResponse;
+import com.amcamp.cineAI.domain.movie.dto.response.BasicMovieInfoResponse;
 import com.amcamp.cineAI.global.util.CookieUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,5 +49,14 @@ public class MemberController {
             @Valid @RequestBody MemberEditRequest memberEditRequest) {
         memberService.editMemberInfo(memberEditRequest);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/list")
+    public Slice<BasicMovieInfoResponse> memberMovieLikedList(
+            @Parameter(description = "이전 페이지의 마지막 영화 ID (첫 페이지는 비워두세요)")
+                    @RequestParam(required = false)
+                    Long lastMovieId,
+            @RequestParam(value = "size", defaultValue = "3") int pageSize) {
+        return memberService.getMemberLikedMovie(lastMovieId, pageSize);
     }
 }

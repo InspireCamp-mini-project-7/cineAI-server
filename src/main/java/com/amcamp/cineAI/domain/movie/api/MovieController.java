@@ -43,4 +43,18 @@ public class MovieController {
     public MovieInfoResponse movieInfo(@PathVariable Long movieId) {
         return movieService.getMovieInfo(movieId);
     }
+
+    //    @Operation(summary = "초기 설정: 영화 시청 반응 추가 대상 영화 조회", description = "사용자에게 초기 설정을 위한 영화 목록을
+    // 제공합니다")
+    //    @GetMapping ("/init")
+    //    public List<BasicMovieInfoResponse> movieInit (){
+    //        return movieService.getMovieInitInfo();
+    //    }
+
+    @Operation(summary = "관심 있는 영화 반응 업데이트 ", description = "사용자가 관심을 표시한 영화 반응을 업데이트합니다")
+    @PatchMapping("/liked")
+    public ResponseEntity<Void> movieLikedUpdate(@RequestParam(required = true) Long movieId) {
+        movieService.updateMovieLikedStatus(movieId);
+        return ResponseEntity.ok().build();
+    }
 }
