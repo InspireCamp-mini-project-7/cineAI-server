@@ -29,6 +29,7 @@ public class MoviePreferenceRepositoryImpl implements MoviePreferenceRepositoryC
                         .select(
                                 Projections.constructor(
                                         BasicMovieInfoResponse.class,
+                                        movie.id,
                                         movie.title,
                                         movie.posterImageUrl,
                                         movie.genreList,
