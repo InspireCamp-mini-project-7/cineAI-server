@@ -68,4 +68,15 @@ public class Movie extends BaseTimeEntity {
                 .status(MovieStatus.CREATED)
                 .build();
     }
+
+    public static Movie createMovie(String title) {
+        return Movie.builder()
+                .title(title)
+                .posterImageUrl("example.com")
+                .directorName("example name")
+                .nation("KR")
+                .plot("Plot")
+                .status(MovieStatus.CREATED)
+                .build();
+    }
 }

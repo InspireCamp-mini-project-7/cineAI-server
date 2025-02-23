@@ -14,7 +14,9 @@ import com.amcamp.cineAI.global.error.exception.CustomException;
 import com.amcamp.cineAI.global.error.exception.ErrorCode;
 import com.amcamp.cineAI.global.util.MemberUtil;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -66,7 +68,7 @@ public class MovieService {
         Member member = memberUtil.getCurrentMember();
 
         MoviePreference moviePreference =
-                moviePreferenceRepository.findByMovieAndMember(movie.getId(), member.getId());
+                moviePreferenceRepository.findByMovieIdAndMemberId(movie.getId(), member.getId());
 
         if (moviePreference != null) {
             moviePreference.updateLikedStatus();
@@ -77,12 +79,19 @@ public class MovieService {
     }
 
     private List<Movie> getMoviesByTitles(List<String> movieTitles) {
+        Set<String> seenTitles = new HashSet<>();
         List<Movie> movies = new ArrayList<>();
         for (String title : movieTitles) {
-            Movie movie = movieRepository.findByTitle(title);
-            if (movie != null) {
-                movies.add(movie);
+            if (seenTitles.contains(title)) {
+                continue;
             }
+            Movie movie = movieRepository.findByTitle(title);
+            if (movie == null) {
+                movie = Movie.createMovie(title);
+                movieRepository.save(movie);
+            }
+            movies.add(movie);
+            seenTitles.add(title);
         }
         return movies;
     }

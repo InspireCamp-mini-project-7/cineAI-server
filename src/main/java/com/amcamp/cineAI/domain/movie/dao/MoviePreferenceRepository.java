@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MoviePreferenceRepository
         extends JpaRepository<MoviePreference, Long>, MoviePreferenceRepositoryCustom {
-    MoviePreference findByMovieAndMember(Long movieId, Long memberId);
+    MoviePreference findByMovieIdAndMemberId(Long movieId, Long memberId);
 }

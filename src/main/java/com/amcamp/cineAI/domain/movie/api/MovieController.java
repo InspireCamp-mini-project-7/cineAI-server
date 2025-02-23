@@ -49,7 +49,7 @@ public class MovieController {
             summary = "초기 설정: 영화 시청 반응 추가 대상 영화 조회",
             description = "사용자에게 초기 설정을 위한 영화 목록을 제공합니다")
     @GetMapping("/init")
-    public List<BasicMovieInfoResponse> movieInit(@RequestParam(required = false) int size) {
+    public List<BasicMovieInfoResponse> movieInit(@RequestParam(required = true) int size) {
         return movieService.getMovieInitInfo(size);
     }
 
