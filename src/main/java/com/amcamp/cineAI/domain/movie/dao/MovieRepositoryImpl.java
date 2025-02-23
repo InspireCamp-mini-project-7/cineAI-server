@@ -30,7 +30,7 @@ public class MovieRepositoryImpl implements MovieRepositoryCustom {
                                         movie.title,
                                         movie.posterImageUrl,
                                         movie.genreList,
-                                        movie.releaseYear))
+                                        movie.releaseDate))
                         .from(movie)
                         .where(movie.status.eq(MovieStatus.CREATED))
                         .orderBy(movie.createdDt.desc())

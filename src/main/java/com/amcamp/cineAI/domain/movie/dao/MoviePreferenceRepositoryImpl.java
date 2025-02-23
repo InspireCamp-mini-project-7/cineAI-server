@@ -33,7 +33,7 @@ public class MoviePreferenceRepositoryImpl implements MoviePreferenceRepositoryC
                                         movie.title,
                                         movie.posterImageUrl,
                                         movie.genreList,
-                                        movie.releaseYear))
+                                        movie.releaseDate))
                         .from(moviePreference)
                         .join(moviePreference.movie, movie)
                         .where(

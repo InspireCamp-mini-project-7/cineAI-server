@@ -3,6 +3,7 @@ package com.amcamp.cineAI.domain.movie.domain;
 import com.amcamp.cineAI.domain.common.model.BaseTimeEntity;
 import com.amcamp.cineAI.domain.movie.dto.request.NewMovieCreateRequest;
 import jakarta.persistence.*;
+import java.util.Collections;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -20,13 +21,15 @@ public class Movie extends BaseTimeEntity {
 
     private String title;
     private String posterImageUrl;
-    private String directorName;
+    private List<String> directorName;
     private List<String> castsList;
     private String nation;
+
+    @Column(length = 5000)
     private String plot;
+
     private List<String> genreList;
-    private Long accAudiences;
-    private String releaseYear;
+    private String releaseDate;
 
     @Enumerated(EnumType.STRING)
     private MovieStatus status;
@@ -35,13 +38,12 @@ public class Movie extends BaseTimeEntity {
     private Movie(
             String title,
             String posterImageUrl,
-            String directorName,
+            List<String> directorName,
             String nation,
             List<String> castList,
             String plot,
             List<String> genreList,
-            Long accAudiences,
-            String releaseYear,
+            String releaseDate,
             MovieStatus status) {
         this.title = title;
         this.posterImageUrl = posterImageUrl;
@@ -50,8 +52,7 @@ public class Movie extends BaseTimeEntity {
         this.nation = nation;
         this.plot = plot;
         this.genreList = genreList;
-        this.accAudiences = accAudiences;
-        this.releaseYear = releaseYear;
+        this.releaseDate = releaseDate;
         this.status = status;
     }
 
@@ -64,8 +65,7 @@ public class Movie extends BaseTimeEntity {
                 .nation(request.nation())
                 .plot(request.plot())
                 .genreList(request.genreList())
-                .accAudiences(request.accAudiences())
-                .releaseYear(request.releaseYear())
+                .releaseDate(request.releaseDate())
                 .status(MovieStatus.CREATED)
                 .build();
     }
@@ -74,10 +74,32 @@ public class Movie extends BaseTimeEntity {
         return Movie.builder()
                 .title(title)
                 .posterImageUrl("example.com")
-                .directorName("example name")
+                .directorName(Collections.singletonList("example name"))
                 .nation("KR")
                 .plot("Plot")
                 .status(MovieStatus.CREATED)
+                .build();
+    }
+
+    public static Movie createMovie(
+            String title,
+            String posterImageUrl,
+            List<String> directorName,
+            List<String> castsList,
+            String nation,
+            String plot,
+            List<String> genreList,
+            String releaseDate) {
+        return Movie.builder()
+                .title(title)
+                .posterImageUrl(posterImageUrl)
+                .directorName(directorName)
+                .castList(castsList)
+                .nation(nation)
+                .plot(plot)
+                .genreList(genreList)
+                .releaseDate(releaseDate)
+                .status(MovieStatus.NORMAL)
                 .build();
     }
 }

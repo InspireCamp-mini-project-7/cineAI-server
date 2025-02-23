@@ -68,6 +68,5 @@ public class MemberController {
         } else {
             return ResponseEntity.status(401).body("비밀번호가 잘못되었습니다.");
         }
-
     }
 }

@@ -13,11 +13,20 @@ import com.amcamp.cineAI.domain.movie.dto.response.MovieInfoResponse;
 import com.amcamp.cineAI.global.error.exception.CustomException;
 import com.amcamp.cineAI.global.error.exception.ErrorCode;
 import com.amcamp.cineAI.global.util.MemberUtil;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -94,5 +103,66 @@ public class MovieService {
             seenTitles.add(title);
         }
         return movies;
+    }
+
+    public void uploadCSV() throws IOException {
+        List<Movie> movies = parseCSV();
+
+        movieRepository.saveAll(movies);
+    }
+
+    private List<Movie> parseCSV() throws IOException {
+        Resource resource = new ClassPathResource("kmdb/kmdb_data.csv");
+
+        try (InputStream inputStream = resource.getInputStream();
+                InputStreamReader reader =
+                        new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+                CSVParser csvParser =
+                        new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+
+            List<Movie> movies = new ArrayList<>();
+
+            for (CSVRecord record : csvParser) {
+                String title = record.get("title");
+                String posterImageUrl = record.get("posterUrl");
+                String directorNames = record.get("directorNm");
+                String casts = record.get("actors");
+                String nation = record.get("nation");
+                String plot = record.get("plotText");
+                String genres = record.get("genre");
+                String releaseDate = record.get("releaseDate");
+
+                // List로 변환
+                List<String> directorNameList = parseCsvList(directorNames);
+                List<String> castsList = parseCsvList(casts);
+                List<String> genreList = parseCsvList(genres);
+
+                // Movie 객체 생성
+                Movie movie =
+                        Movie.createMovie(
+                                title,
+                                posterImageUrl,
+                                directorNameList,
+                                castsList,
+                                nation,
+                                plot,
+                                genreList,
+                                releaseDate);
+                movies.add(movie);
+            }
+            return movies;
+        }
+    }
+
+    private List<String> parseCsvList(String csvValue) {
+        if (csvValue == null || csvValue.isEmpty()) {
+            return new ArrayList<>();
+        }
+        String[] values = csvValue.split(","); // 쉼표로 분리
+        List<String> list = new ArrayList<>();
+        for (String value : values) {
+            list.add(value.trim()); // 공백 제거 후 추가
+        }
+        return list;
     }
 }
