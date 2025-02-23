@@ -95,10 +95,6 @@ public class MovieService {
                 continue;
             }
             Movie movie = movieRepository.findByTitle(title);
-            if (movie == null) {
-                movie = Movie.createMovie(title);
-                movieRepository.save(movie);
-            }
             movies.add(movie);
             seenTitles.add(title);
         }
