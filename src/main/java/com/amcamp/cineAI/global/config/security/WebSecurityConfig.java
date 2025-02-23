@@ -42,7 +42,8 @@ public class WebSecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.addAllowedOrigin("http://localhost:5173"); // 허용할 프론트엔드 주소
+        //        configuration.addAllowedOrigin("http://localhost:5173"); // 허용할 프론트엔드 주소 (프론트엔드 연결
+        // 시 필요)
         configuration.addAllowedHeader("*"); // 모든 헤더를 허용
         configuration.addAllowedMethod("*"); // 모든 HTTP 메서드를 허용 (GET, POST 등)
         configuration.setAllowCredentials(true); // 자격 증명(쿠키 등)을 허용
