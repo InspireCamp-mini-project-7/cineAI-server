@@ -28,7 +28,12 @@ public class MemberUtil {
     }
 
     private Long getCurrentMemberId() {
+
         String token = cookieUtil.getRefreshTokenFromCookie();
+
+        if (token == null) {
+            throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
+        }
         Long currentMemberId = refreshTokenRepository.findByToken(token).getMemberId();
         return currentMemberId;
     }
