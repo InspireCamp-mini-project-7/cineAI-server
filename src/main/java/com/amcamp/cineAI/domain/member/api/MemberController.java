@@ -58,6 +58,7 @@ public class MemberController {
                     Long lastMovieId,
             @RequestParam(value = "size", defaultValue = "3") int pageSize) {
         return memberService.getMemberLikedMovie(lastMovieId, pageSize);
+    }
 
     @Operation(summary = "관리자 로그인", description = "관리자용 비밀번호를 입력받아 관리자 로그인을 진행합니다.")
     @PostMapping("/admin-login")
