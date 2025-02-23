@@ -2,7 +2,7 @@ package com.amcamp.cineAI.domain.auth.api;
 
 import com.amcamp.cineAI.domain.auth.application.AuthService;
 import com.amcamp.cineAI.domain.auth.dto.request.AuthCodeRequest;
-import com.amcamp.cineAI.domain.auth.dto.response.SocialLoginResponse;
+import com.amcamp.cineAI.domain.auth.dto.response.FirstLoginResponse;
 import com.amcamp.cineAI.global.util.CookieUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,11 +22,11 @@ public class AuthController {
 
     @Operation(summary = "회원가입 및 로그인", description = "회원가입 및 로그인을 진행합니다.")
     @PostMapping("/social-login")
-    public ResponseEntity<SocialLoginResponse> memberSocialLogin(
+    public ResponseEntity<FirstLoginResponse> memberSocialLogin(
             @Valid @RequestBody AuthCodeRequest authCodeRequest) {
-        SocialLoginResponse socialLoginResponse = authService.oAuthLogin(authCodeRequest);
-        String refreshToken = socialLoginResponse.refreshToken();
+        FirstLoginResponse loginResponse = authService.oAuthLogin(authCodeRequest);
+        String refreshToken = loginResponse.refreshToken();
         HttpHeaders headers = cookieUtil.generateRefreshTokenCookie(refreshToken);
-        return ResponseEntity.ok().headers(headers).body(socialLoginResponse);
+        return ResponseEntity.ok().headers(headers).body(loginResponse);
     }
 }
