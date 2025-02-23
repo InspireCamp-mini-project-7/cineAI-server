@@ -18,7 +18,7 @@ public class CookieUtil {
                 ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, refreshToken)
                         .path("/")
                         .secure(false)
-                        .sameSite(Cookie.SameSite.STRICT.attributeValue())
+                        .sameSite(Cookie.SameSite.LAX.attributeValue())
                         .httpOnly(true) // js에서 접근 금지
                         .build();
 
