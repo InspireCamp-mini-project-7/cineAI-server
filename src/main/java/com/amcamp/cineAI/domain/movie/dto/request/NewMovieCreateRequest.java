@@ -5,10 +5,9 @@ import java.util.List;
 public record NewMovieCreateRequest(
         String title,
         String posterImageUrl,
-        String directorName,
+        List<String> directorName,
         List<String> castList,
         String nation,
         String plot,
         List<String> genreList,
-        Long accAudiences,
-        String releaseYear) {}
+        String releaseDate) {}

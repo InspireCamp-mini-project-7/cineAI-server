@@ -4,6 +4,8 @@ import com.amcamp.cineAI.domain.movie.application.MovieService;
 import com.amcamp.cineAI.domain.movie.dto.request.NewMovieCreateRequest;
 import com.amcamp.cineAI.domain.movie.dto.response.BasicMovieInfoResponse;
 import com.amcamp.cineAI.domain.movie.dto.response.MovieInfoResponse;
+import com.amcamp.cineAI.global.error.exception.CustomException;
+import com.amcamp.cineAI.global.error.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -58,5 +60,16 @@ public class MovieController {
     public ResponseEntity<Void> movieLikedUpdate(@RequestParam(required = true) Long movieId) {
         movieService.updateMovieLikedStatus(movieId);
         return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "영화 DB 초기 데이터 세팅", description = "KMDB의 데이터 CSV파일을 이용하여 초기 데이터 세팅")
+    @GetMapping("/upload")
+    public ResponseEntity<Void> movieDbInit() {
+        try {
+            movieService.uploadCSV();
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.CSV_NOT_UPLOAD);
+        }
     }
 }

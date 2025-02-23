@@ -7,13 +7,12 @@ public record MovieInfoResponse(
         Long id,
         String title,
         String posterImageUrl,
-        String directorName,
+        List<String> directorName,
         List<String> castsList,
         String nation,
         String plot,
         List<String> genreList,
-        Long accAudiences,
-        String releaseYear) {
+        String releaseDate) {
     public static MovieInfoResponse of(Movie movie) {
         return new MovieInfoResponse(
                 movie.getId(),
@@ -24,7 +23,6 @@ public record MovieInfoResponse(
                 movie.getNation(),
                 movie.getPlot(),
                 movie.getGenreList(),
-                movie.getAccAudiences(),
-                movie.getReleaseYear());
+                movie.getReleaseDate());
     }
 }
