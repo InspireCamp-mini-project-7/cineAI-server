@@ -3,6 +3,7 @@ package com.amcamp.cineAI.domain.movie.domain;
 import com.amcamp.cineAI.domain.common.model.BaseTimeEntity;
 import com.amcamp.cineAI.domain.movie.dto.request.NewMovieCreateRequest;
 import jakarta.persistence.*;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,10 +21,10 @@ public class Movie extends BaseTimeEntity {
     private String title;
     private String posterImageUrl;
     private String directorName;
-    private String[] castsList;
+    private List<String> castsList;
     private String nation;
     private String plot;
-    private String[] genreList;
+    private List<String> genreList;
     private Long accAudiences;
     private String releaseYear;
 
@@ -36,9 +37,9 @@ public class Movie extends BaseTimeEntity {
             String posterImageUrl,
             String directorName,
             String nation,
-            String[] castList,
+            List<String> castList,
             String plot,
-            String[] genreList,
+            List<String> genreList,
             Long accAudiences,
             String releaseYear,
             MovieStatus status) {
@@ -65,6 +66,17 @@ public class Movie extends BaseTimeEntity {
                 .genreList(request.genreList())
                 .accAudiences(request.accAudiences())
                 .releaseYear(request.releaseYear())
+                .status(MovieStatus.CREATED)
+                .build();
+    }
+
+    public static Movie createMovie(String title) {
+        return Movie.builder()
+                .title(title)
+                .posterImageUrl("example.com")
+                .directorName("example name")
+                .nation("KR")
+                .plot("Plot")
                 .status(MovieStatus.CREATED)
                 .build();
     }

@@ -1,8 +1,9 @@
 package com.amcamp.cineAI.domain.movie.dao;
 
 import static com.amcamp.cineAI.domain.movie.domain.QMovie.movie;
+import static com.amcamp.cineAI.domain.movie.domain.QMoviePreference.moviePreference;
 
-import com.amcamp.cineAI.domain.movie.domain.MovieStatus;
+import com.amcamp.cineAI.domain.movie.domain.MovieLikedStatus;
 import com.amcamp.cineAI.domain.movie.dto.response.BasicMovieInfoResponse;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -16,11 +17,13 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class MovieRepositoryImpl implements MovieRepositoryCustom {
+public class MoviePreferenceRepositoryImpl implements MoviePreferenceRepositoryCustom {
+
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public Slice<BasicMovieInfoResponse> findAllNewMovie(Long lastMovieId, int pageSize) {
+    public Slice<BasicMovieInfoResponse> findMemberLikedMovie(
+            Long lastMovieId, int pageSize, Long memberId) {
         List<BasicMovieInfoResponse> results =
                 jpaQueryFactory
                         .select(
@@ -31,11 +34,14 @@ public class MovieRepositoryImpl implements MovieRepositoryCustom {
                                         movie.posterImageUrl,
                                         movie.genreList,
                                         movie.releaseYear))
-                        .from(movie)
-                        .where(movie.status.eq(MovieStatus.CREATED))
-                        .orderBy(movie.createdDt.desc())
-                        .limit(pageSize + 1)
+                        .from(moviePreference)
+                        .join(moviePreference.movie, movie)
+                        .where(
+                                moviePreference.member.id.eq(memberId),
+                                moviePreference.liked.eq(MovieLikedStatus.LIKED))
+                        .limit(pageSize + 1) // 페이지 사이즈 + 1개 더 가져와서 마지막 페이지 확인
                         .fetch();
+
         return checkLastPage(pageSize, results);
     }
 

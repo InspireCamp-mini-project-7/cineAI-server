@@ -6,8 +6,11 @@ import com.amcamp.cineAI.domain.member.dao.MemberRepository;
 import com.amcamp.cineAI.domain.member.domain.Member;
 import com.amcamp.cineAI.domain.member.dto.request.MemberEditRequest;
 import com.amcamp.cineAI.domain.member.dto.response.MemberInfoResponse;
+import com.amcamp.cineAI.domain.movie.dao.MoviePreferenceRepository;
+import com.amcamp.cineAI.domain.movie.dto.response.BasicMovieInfoResponse;
 import com.amcamp.cineAI.global.util.MemberUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +21,7 @@ public class MemberService {
     private final MemberUtil memberUtil;
     private final RefreshTokenRepository refreshTokenRepository;
     private final MemberRepository memberRepository;
+    private final MoviePreferenceRepository moviePreferenceRepository;
 
     public void logoutMember() {
         Member currentMember = memberUtil.getCurrentMember();
@@ -44,5 +48,12 @@ public class MemberService {
         Member currentMember = memberUtil.getCurrentMember();
         currentMember.updateNickname(memberEditRequest.nickname());
         return MemberInfoResponse.of(currentMember);
+    }
+
+    @Transactional(readOnly = true)
+    public Slice<BasicMovieInfoResponse> getMemberLikedMovie(Long lastMovieId, int pageSize) {
+        Member currentMember = memberUtil.getCurrentMember();
+        Long memberId = currentMember.getId();
+        return moviePreferenceRepository.findMemberLikedMovie(lastMovieId, pageSize, memberId);
     }
 }

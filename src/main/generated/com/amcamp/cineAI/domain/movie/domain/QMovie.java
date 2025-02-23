@@ -7,6 +7,7 @@ import com.querydsl.core.types.dsl.*;
 import com.querydsl.core.types.PathMetadata;
 import javax.annotation.processing.Generated;
 import com.querydsl.core.types.Path;
+import com.querydsl.core.types.dsl.PathInits;
 
 
 /**
@@ -23,14 +24,14 @@ public class QMovie extends EntityPathBase<Movie> {
 
     public final NumberPath<Long> accAudiences = createNumber("accAudiences", Long.class);
 
-    public final ArrayPath<String[], String> castsList = createArray("castsList", String[].class);
+    public final ListPath<String, StringPath> castsList = this.<String, StringPath>createList("castsList", String.class, StringPath.class, PathInits.DIRECT2);
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdDt = _super.createdDt;
 
     public final StringPath directorName = createString("directorName");
 
-    public final ArrayPath<String[], String> genreList = createArray("genreList", String[].class);
+    public final ListPath<String, StringPath> genreList = this.<String, StringPath>createList("genreList", String.class, StringPath.class, PathInits.DIRECT2);
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
