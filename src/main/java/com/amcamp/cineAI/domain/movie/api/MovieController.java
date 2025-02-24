@@ -4,6 +4,7 @@ import com.amcamp.cineAI.domain.movie.application.MovieService;
 import com.amcamp.cineAI.domain.movie.dto.request.NewMovieCreateRequest;
 import com.amcamp.cineAI.domain.movie.dto.response.BasicMovieInfoResponse;
 import com.amcamp.cineAI.domain.movie.dto.response.MovieInfoResponse;
+import com.amcamp.cineAI.domain.movie.dto.response.MovieInfoResponseList;
 import com.amcamp.cineAI.global.error.exception.CustomException;
 import com.amcamp.cineAI.global.error.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -60,6 +61,18 @@ public class MovieController {
     public ResponseEntity<Void> movieLikedUpdate(@RequestParam(required = true) Long movieId) {
         movieService.updateMovieLikedStatus(movieId);
         return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "영화 검색 기능", description = "검색 키워드를 제목, 배우명, 감독명, 장르의 키워드로 검색합니다.")
+    @GetMapping("/search")
+    public MovieInfoResponseList movieSearch(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(value = "page", defaultValue = "0") int page, // 페이지 기본값은 0
+            @RequestParam(value = "size", defaultValue = "5") int size) { // 페이지 크기 기본값은 3
+        int offset = page * size;
+
+        // 서비스에서 searchMovies 메서드 호출
+        return movieService.searchMovies(keyword, size, offset);
     }
 
     @Operation(summary = "영화 DB 초기 데이터 세팅", description = "KMDB의 데이터 CSV파일을 이용하여 초기 데이터 세팅")
