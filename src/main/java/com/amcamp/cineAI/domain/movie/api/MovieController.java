@@ -123,6 +123,7 @@ public class MovieController {
         Slice<BasicMovieInfoResponse> response =
                 movieService.getTodaysMoviePreferences(lastMovieId, pageSize);
         return ResponseEntity.ok().body(response);
+    }
   
     @Operation(summary = "영화 포스터 다운로드", description = "영화 포스터를 다운로드합니다.")
     @GetMapping("{movieId}/poster")

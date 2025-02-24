@@ -261,6 +261,8 @@ public class MovieService {
                 .filter(s -> !s.isEmpty())
                 .limit(3)
                 .collect(Collectors.toList());
+    }
+
     public MovieInfoResponseList searchMovies(String keyword, int limit, int offset) {
 
         List<Object[]> results = movieRepository.searchMovies(keyword, limit, offset);
