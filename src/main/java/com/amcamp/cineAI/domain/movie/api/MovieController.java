@@ -15,17 +15,16 @@ import com.amcamp.cineAI.global.util.FileUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriUtils;
 
@@ -118,33 +117,30 @@ public class MovieController {
                 movieRepository
                         .findById(movieId)
                         .orElseThrow(() -> new CustomException(ErrorCode.MOVIE_NOT_FOUND));
-
         String posterImageUrl = movie.getPosterImageUrl();
         String title = movie.getTitle();
-        Resource resource = null;
-        try {
-            if (movie.getStatus().equals(MovieStatus.NORMAL)) {
-                RestTemplate restTemplate = new RestTemplate();
-                ResponseEntity<byte[]> response =
-                        restTemplate.getForEntity(posterImageUrl, byte[].class);
+        MovieStatus status = movie.getStatus();
+        String fileExtension = fileUtils.extractExt(posterImageUrl);
 
-                byte[] imageBytes = response.getBody();
-                resource = new ByteArrayResource(imageBytes);
-            } else {
-                String fullPath = fileUtils.getFullPath(posterImageUrl);
-                resource = new UrlResource("file:" + fullPath);
+        try {
+            if (status.equals(MovieStatus.CREATED)) {
+                posterImageUrl = fileUtils.generatePresignedUrl(posterImageUrl);
             }
+            InputStream imageInputStream = fileUtils.getImageInputStream(posterImageUrl);
+
+            String contentType = "image/" + fileExtension; // 이미지의 Content-Type 설정
+
+            // 파일 이름 인코딩
+            String encodedFileName =
+                    UriUtils.encode(title + "." + fileExtension, StandardCharsets.UTF_8);
+            String contentDisposition = "attachment; filename=\"" + encodedFileName + "\"";
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
+                    .header(HttpHeaders.CONTENT_TYPE, contentType)
+                    .body(new InputStreamResource(imageInputStream));
         } catch (Exception e) {
             throw new CustomException(ErrorCode.POSTER_NOT_FOUND);
         }
-
-        String encodedFileName =
-                UriUtils.encode(
-                        title + "." + fileUtils.extractExt(posterImageUrl), StandardCharsets.UTF_8);
-        String contentDisposition = "attachment; filename=\"" + encodedFileName + "\"";
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
-                .body(resource);
     }
 }
