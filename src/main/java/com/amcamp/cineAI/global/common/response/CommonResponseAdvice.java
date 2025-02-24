@@ -2,6 +2,7 @@ package com.amcamp.cineAI.global.common.response;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.MethodParameter;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.ServerHttpRequest;
@@ -30,7 +31,7 @@ public class CommonResponseAdvice implements ResponseBodyAdvice {
         int status = httpServletResponse.getStatus();
         HttpStatus resolve = HttpStatus.resolve(status);
 
-        if (resolve == null || body instanceof String) {
+        if (resolve == null || body instanceof String || body instanceof Resource) {
             return body;
         }
 

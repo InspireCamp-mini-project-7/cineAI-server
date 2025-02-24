@@ -1,20 +1,32 @@
 package com.amcamp.cineAI.domain.movie.api;
 
 import com.amcamp.cineAI.domain.movie.application.MovieService;
+import com.amcamp.cineAI.domain.movie.dao.MovieRepository;
+import com.amcamp.cineAI.domain.movie.domain.Movie;
+import com.amcamp.cineAI.domain.movie.domain.MovieStatus;
+import com.amcamp.cineAI.domain.movie.dto.request.MovieCreateForm;
 import com.amcamp.cineAI.domain.movie.dto.request.NewMovieCreateRequest;
 import com.amcamp.cineAI.domain.movie.dto.response.BasicMovieInfoResponse;
 import com.amcamp.cineAI.domain.movie.dto.response.MovieInfoResponse;
 import com.amcamp.cineAI.global.error.exception.CustomException;
 import com.amcamp.cineAI.global.error.exception.ErrorCode;
+import com.amcamp.cineAI.global.util.FileUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Slice;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriUtils;
 
 @Tag(name = "영화 API", description = "영화 관련 API입니다.")
 @RestController
@@ -23,11 +35,24 @@ import org.springframework.web.bind.annotation.*;
 public class MovieController {
 
     private final MovieService movieService;
+    private final MovieRepository movieRepository;
+    private final FileUtils fileUtils;
 
     @Operation(summary = "최신 영화 추가", description = "최신 영화를 추가합니다.")
     @PostMapping("/create")
-    public ResponseEntity<Void> movieCreate(@Valid @RequestBody NewMovieCreateRequest request) {
-        movieService.createMovie(request);
+    public ResponseEntity<Void> movieCreate(@ModelAttribute MovieCreateForm form) {
+        MultipartFile posterImage = form.getPosterImage();
+        NewMovieCreateRequest request =
+                new NewMovieCreateRequest(
+                        form.getTitle(),
+                        null,
+                        form.getDirectorName(),
+                        form.getCastList(),
+                        form.getNation(),
+                        form.getPlot(),
+                        form.getGenreList(),
+                        form.getReleaseDate());
+        movieService.createMovie(request, posterImage);
         return ResponseEntity.ok().build();
     }
 
@@ -71,5 +96,42 @@ public class MovieController {
         } catch (Exception e) {
             throw new CustomException(ErrorCode.CSV_NOT_UPLOAD);
         }
+    }
+
+    @Operation(summary = "영화 포스터 다운로드", description = "영화 포스터를 다운로드합니다.")
+    @GetMapping("{movieId}/poster")
+    public ResponseEntity<Resource> moviePosterDownload(@PathVariable Long movieId) {
+        Movie movie =
+                movieRepository
+                        .findById(movieId)
+                        .orElseThrow(() -> new CustomException(ErrorCode.MOVIE_NOT_FOUND));
+
+        String posterImageUrl = movie.getPosterImageUrl();
+        String title = movie.getTitle();
+        Resource resource = null;
+        try {
+            if (movie.getStatus().equals(MovieStatus.NORMAL)) {
+                RestTemplate restTemplate = new RestTemplate();
+                ResponseEntity<byte[]> response =
+                        restTemplate.getForEntity(posterImageUrl, byte[].class);
+
+                byte[] imageBytes = response.getBody();
+                resource = new ByteArrayResource(imageBytes);
+            } else {
+                String fullPath = fileUtils.getFullPath(posterImageUrl);
+                resource = new UrlResource("file:" + fullPath);
+            }
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.POSTER_NOT_FOUND);
+        }
+
+        String encodedFileName =
+                UriUtils.encode(
+                        title + "." + fileUtils.extractExt(posterImageUrl), StandardCharsets.UTF_8);
+        String contentDisposition = "attachment; filename=\"" + encodedFileName + "\"";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
+                .body(resource);
     }
 }

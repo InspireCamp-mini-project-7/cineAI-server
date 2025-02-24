@@ -12,6 +12,7 @@ import com.amcamp.cineAI.domain.movie.dto.response.BasicMovieInfoResponse;
 import com.amcamp.cineAI.domain.movie.dto.response.MovieInfoResponse;
 import com.amcamp.cineAI.global.error.exception.CustomException;
 import com.amcamp.cineAI.global.error.exception.ErrorCode;
+import com.amcamp.cineAI.global.util.FileUtils;
 import com.amcamp.cineAI.global.util.MemberUtil;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,6 +31,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Transactional
 @Service
@@ -38,8 +40,11 @@ public class MovieService {
     private final MovieRepository movieRepository;
     private final MoviePreferenceRepository moviePreferenceRepository;
     private final MemberUtil memberUtil;
+    private final FileUtils fileUtils;
 
-    public void createMovie(NewMovieCreateRequest request) {
+    public void createMovie(NewMovieCreateRequest request, MultipartFile posterFile) {
+        String storeFileName = fileUtils.uploadFile(posterFile);
+        request = request.withPosterImageUrl(storeFileName);
         Movie newMovie = Movie.createMovie(request);
         movieRepository.save(newMovie);
     }
