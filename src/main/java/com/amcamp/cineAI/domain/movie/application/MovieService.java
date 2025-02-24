@@ -1,5 +1,7 @@
 package com.amcamp.cineAI.domain.movie.application;
 
+import com.amcamp.cineAI.domain.llm.application.LLMService;
+import com.amcamp.cineAI.domain.llm.application.PromptService;
 import com.amcamp.cineAI.domain.member.domain.Member;
 import com.amcamp.cineAI.domain.movie.MovieConstants;
 import com.amcamp.cineAI.domain.movie.dao.MoviePreferenceRepository;
@@ -18,16 +20,20 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +44,8 @@ public class MovieService {
     private final MovieRepository movieRepository;
     private final MoviePreferenceRepository moviePreferenceRepository;
     private final MemberUtil memberUtil;
+    private final LLMService llmService;
+    private final PromptService promptService;
 
     public void createMovie(NewMovieCreateRequest request) {
         Movie newMovie = Movie.createMovie(request);
@@ -160,5 +168,91 @@ public class MovieService {
             list.add(value.trim()); // 공백 제거 후 추가
         }
         return list;
+    }
+
+    @Transactional(readOnly = true)
+    public Slice<BasicMovieInfoResponse> getTodaysMoviePreferences(Long lastMovieId, int pageSize) {
+        Member currentMember = memberUtil.getCurrentMember();
+        List<MoviePreference> preferences =
+                moviePreferenceRepository.findTop10ByMemberIdOrderByCreatedDtDesc(
+                        currentMember.getId());
+        List<Movie> likedMovies =
+                preferences.stream()
+                        .map(
+                                pref ->
+                                        movieRepository
+                                                .findById(pref.getMovie().getId())
+                                                .orElseThrow(
+                                                        () ->
+                                                                new CustomException(
+                                                                        ErrorCode.MOVIE_NOT_FOUND)))
+                        .collect(Collectors.toList());
+
+        String preferenceData = buildPreferenceData(likedMovies);
+        String prompt = promptService.getMovieSearchPrompt(preferenceData);
+        String llmResponse = llmService.callLLM(prompt);
+
+        List<String> keywords = parseKeywords(llmResponse);
+        System.out.println("Generated Keywords: " + keywords);
+
+        if (keywords.isEmpty()) {
+            throw new CustomException(ErrorCode.SEARCH_KEYWORD_NOT_FOUND);
+        }
+
+        List<Movie> searchResults =
+                movieRepository.searchMoviesByKeywords(keywords, lastMovieId, pageSize);
+
+        List<BasicMovieInfoResponse> responses =
+                searchResults.stream()
+                        .map(
+                                m ->
+                                        new BasicMovieInfoResponse(
+                                                m.getId(),
+                                                m.getTitle(),
+                                                m.getPosterImageUrl(),
+                                                m.getGenreList(),
+                                                m.getReleaseDate()))
+                        .collect(Collectors.toList());
+
+        boolean hasNext = responses.size() > pageSize;
+        if (hasNext) {
+            responses = responses.subList(0, pageSize);
+        }
+        return new SliceImpl<>(responses, PageRequest.of(0, pageSize), hasNext);
+    }
+
+    private String buildPreferenceData(List<Movie> movies) {
+        StringBuilder genres = new StringBuilder();
+        StringBuilder directors = new StringBuilder();
+        StringBuilder actors = new StringBuilder();
+
+        for (Movie movie : movies) {
+            if (movie.getGenreList() != null) {
+                genres.append(String.join(",", movie.getGenreList())).append(",");
+            }
+            if (movie.getDirectorName() != null) {
+                directors.append(String.join(",", movie.getDirectorName())).append(",");
+            }
+            if (movie.getCastsList() != null) {
+                actors.append(String.join(",", movie.getCastsList())).append(",");
+            }
+        }
+        String genreStr = !genres.isEmpty() ? genres.substring(0, genres.length() - 1) : "";
+        String directorStr =
+                !directors.isEmpty() ? directors.substring(0, directors.length() - 1) : "";
+        String actorStr = !actors.isEmpty() ? actors.substring(0, actors.length() - 1) : "";
+
+        return "장르: " + genreStr + "\n감독: " + directorStr + "\n배우: " + actorStr;
+    }
+
+    private List<String> parseKeywords(String llmResponse) {
+        if (llmResponse == null || llmResponse.isEmpty()) {
+            return List.of();
+        }
+        return Arrays.stream(llmResponse.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .limit(3)
+                .collect(Collectors.toList());
     }
 }

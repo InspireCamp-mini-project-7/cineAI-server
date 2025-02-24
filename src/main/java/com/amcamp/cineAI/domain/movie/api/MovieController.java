@@ -72,4 +72,18 @@ public class MovieController {
             throw new CustomException(ErrorCode.CSV_NOT_UPLOAD);
         }
     }
+
+    @Operation(
+            summary = "영화 추천",
+            description = "현재 로그인한 회원의 선호 정보를 가져와 LLM을 호출하여 검색어 생성, 생성된 검색어로 DB에서 영화 정보 조회")
+    @GetMapping("/todays")
+    public ResponseEntity<Slice<BasicMovieInfoResponse>> getTodaysMovies(
+            @Parameter(description = "이전 페이지의 마지막 영화 ID (첫 페이지는 비워두세요)")
+                    @RequestParam(required = false)
+                    Long lastMovieId,
+            @RequestParam(value = "size", defaultValue = "3") int pageSize) {
+        Slice<BasicMovieInfoResponse> response =
+                movieService.getTodaysMoviePreferences(lastMovieId, pageSize);
+        return ResponseEntity.ok().body(response);
+    }
 }
