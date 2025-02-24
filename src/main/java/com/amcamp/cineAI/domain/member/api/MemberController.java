@@ -4,11 +4,14 @@ import com.amcamp.cineAI.domain.member.application.MemberService;
 import com.amcamp.cineAI.domain.member.dto.request.MemberEditRequest;
 import com.amcamp.cineAI.domain.member.dto.response.MemberInfoResponse;
 import com.amcamp.cineAI.domain.movie.dto.response.BasicMovieInfoResponse;
+import com.amcamp.cineAI.global.error.exception.CustomException;
+import com.amcamp.cineAI.global.error.exception.ErrorCode;
 import com.amcamp.cineAI.global.util.CookieUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
@@ -62,11 +65,13 @@ public class MemberController {
 
     @Operation(summary = "관리자 로그인", description = "관리자용 비밀번호를 입력받아 관리자 로그인을 진행합니다.")
     @PostMapping("/admin-login")
-    public ResponseEntity<String> adminLogin(@RequestParam String password) {
-        if ("admin1234".equals(password)) {
-            return ResponseEntity.ok("로그인 성공");
-        } else {
-            return ResponseEntity.status(401).body("비밀번호가 잘못되었습니다.");
+    public ResponseEntity<Void> adminLogin(@RequestBody Map<String, String> requestBody) {
+        String password = requestBody.get("password");
+
+        if (!"admin1234".equals(password)) {
+            throw new CustomException(ErrorCode.ADMIN_NOT_FOUND);
         }
+
+        return ResponseEntity.ok().build();
     }
 }

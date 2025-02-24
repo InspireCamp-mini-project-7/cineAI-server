@@ -25,6 +25,7 @@ spring:
     username: sa
     password:
   jpa:
+    show-sql: true # SQL 쿼리 로그 출력
     hibernate:
       ddl-auto: none
     properties:
@@ -35,3 +36,9 @@ spring:
 kakao:
   client_id: ${KAKAO_CLIENT_ID}
   redirect_uri: ${KAKAO_REDIRECT_URI}
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG

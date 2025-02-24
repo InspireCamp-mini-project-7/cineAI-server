@@ -12,6 +12,7 @@ import com.amcamp.cineAI.domain.movie.domain.MoviePreference;
 import com.amcamp.cineAI.domain.movie.dto.request.NewMovieCreateRequest;
 import com.amcamp.cineAI.domain.movie.dto.response.BasicMovieInfoResponse;
 import com.amcamp.cineAI.domain.movie.dto.response.MovieInfoResponse;
+import com.amcamp.cineAI.domain.movie.dto.response.MovieInfoResponseList;
 import com.amcamp.cineAI.global.error.exception.CustomException;
 import com.amcamp.cineAI.global.error.exception.ErrorCode;
 import com.amcamp.cineAI.global.util.MemberUtil;
@@ -25,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.*;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -254,5 +256,24 @@ public class MovieService {
                 .filter(s -> !s.isEmpty())
                 .limit(3)
                 .collect(Collectors.toList());
+    public MovieInfoResponseList searchMovies(String keyword, int limit, int offset) {
+
+        List<Object[]> results = movieRepository.searchMovies(keyword, limit, offset);
+        int totalCnt = movieRepository.searchMoviesTotalCnt(keyword);
+
+        List<BasicMovieInfoResponse> responses = new ArrayList<>();
+        for (Object[] result : results) {
+            Long id = (Long) result[0];
+            String title = (String) result[1];
+            String posterImageUrl = (String) result[2];
+            Object[] tempObj = (Object[]) result[3];
+            List<String> genreList = Arrays.asList(String.valueOf(tempObj[0]).split("/"));
+            String releaseDate = (String) result[4];
+
+            BasicMovieInfoResponse response =
+                    new BasicMovieInfoResponse(id, title, posterImageUrl, genreList, releaseDate);
+            responses.add(response);
+        }
+        return new MovieInfoResponseList(responses, limit, offset, totalCnt);
     }
 }
