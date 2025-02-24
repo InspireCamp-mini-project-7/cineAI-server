@@ -12,6 +12,8 @@ public enum ErrorCode {
     AUTH_NOT_FOUND(HttpStatus.UNAUTHORIZED, "사용자 인증 정보를 찾을 수 없습니다. 올바른 토큰으로 요청해주세요."),
     MOVIE_NOT_FOUND(HttpStatus.NOT_FOUND, "영화를 찾을 수 없습니다."),
     CSV_NOT_UPLOAD(HttpStatus.INTERNAL_SERVER_ERROR, "업로드에 실패했습니다."),
+    POSTER_NOT_FOUND(HttpStatus.NOT_FOUND, "포스터를 찾을 수 없습니다."),
+    FILE_UPLOAD_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "파일 저장에 실패했습니다."),
     ADMIN_NOT_FOUND(HttpStatus.NOT_FOUND, "관리자 비밀번호가 일치하지 않습니다.");
 
     private final HttpStatus status;
