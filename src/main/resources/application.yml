@@ -25,6 +25,7 @@ spring:
     username: sa
     password:
   jpa:
+    show-sql: true # SQL 쿼리 로그 출력
     hibernate:
       ddl-auto: update
     properties:
@@ -44,3 +45,9 @@ kakao:
 file:
   dir: C:\workspace\cineAI\images\
   #dir: /app/data/images/
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
