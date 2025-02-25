@@ -39,4 +39,16 @@ public class PromptService {
             throw new RuntimeException("QA 프롬프트 파일 로드 실패", e);
         }
     }
+
+    public String getMovieSearchPrompt(String movieList) {
+        try {
+            ClassPathResource resource = new ClassPathResource("prompts/movie-search.txt");
+            Reader reader =
+                    new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8);
+            String promptTemplate = FileCopyUtils.copyToString(reader);
+            return promptTemplate.replace("{movie_list}", movieList);
+        } catch (Exception e) {
+            throw new RuntimeException("영화 검색 프롬프트 파일 로드 실패", e);
+        }
+    }
 }

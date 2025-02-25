@@ -1,5 +1,7 @@
 package com.amcamp.cineAI.domain.movie.application;
 
+import com.amcamp.cineAI.domain.llm.application.LLMService;
+import com.amcamp.cineAI.domain.llm.application.PromptService;
 import com.amcamp.cineAI.domain.member.domain.Member;
 import com.amcamp.cineAI.domain.movie.MovieConstants;
 import com.amcamp.cineAI.domain.movie.dao.MoviePreferenceRepository;
@@ -20,13 +22,24 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,6 +51,8 @@ public class MovieService {
     private final MovieRepository movieRepository;
     private final MoviePreferenceRepository moviePreferenceRepository;
     private final MemberUtil memberUtil;
+    private final LLMService llmService;
+    private final PromptService promptService;
     private final FileUtils fileUtils;
 
     public void createMovie(NewMovieCreateRequest request, MultipartFile posterFile) {
@@ -165,11 +180,169 @@ public class MovieService {
         return list;
     }
 
-    public MovieInfoResponseList searchMovies(String keyword, int limit, int offset) {
+    @Transactional(readOnly = true)
+    public Slice<BasicMovieInfoResponse> getTodaysMoviePreferences(Long lastMovieId, int pageSize) {
+        Member currentMember = memberUtil.getCurrentMember();
+        List<MoviePreference> preferences =
+                moviePreferenceRepository.findTop10ByMemberIdOrderByCreatedDtDesc(
+                        currentMember.getId());
+        List<Movie> likedMovies =
+                preferences.stream()
+                        .map(
+                                pref ->
+                                        movieRepository
+                                                .findById(pref.getMovie().getId())
+                                                .orElseThrow(
+                                                        () ->
+                                                                new CustomException(
+                                                                        ErrorCode.MOVIE_NOT_FOUND)))
+                        .collect(Collectors.toList());
 
+        String preferenceData = buildPreferenceData(likedMovies);
+        System.out.println(preferenceData);
+        String prompt = promptService.getMovieSearchPrompt(preferenceData);
+        System.out.println(prompt);
+        String llmResponse = llmService.callLLM(prompt);
+        System.out.println(llmResponse);
+
+        List<String> keywords = parseKeywords(llmResponse);
+        System.out.println(keywords);
+
+        if (keywords.isEmpty()) {
+            throw new CustomException(ErrorCode.SEARCH_KEYWORD_NOT_FOUND);
+        }
+
+        List<Movie> searchResults =
+                movieRepository.searchMoviesByKeywords(keywords, lastMovieId, pageSize);
+
+        List<BasicMovieInfoResponse> responses =
+                searchResults.stream()
+                        .map(
+                                m ->
+                                        new BasicMovieInfoResponse(
+                                                m.getId(),
+                                                m.getTitle(),
+                                                m.getPosterImageUrl(),
+                                                m.getGenreList(),
+                                                m.getReleaseDate()))
+                        .collect(Collectors.toList());
+
+        boolean hasNext = responses.size() > pageSize;
+        if (hasNext) {
+            responses = responses.subList(0, pageSize);
+        }
+        return new SliceImpl<>(responses, PageRequest.of(0, pageSize), hasNext);
+    }
+
+    private String buildPreferenceData(List<Movie> movies) {
+        StringBuilder genres = new StringBuilder();
+        StringBuilder directors = new StringBuilder();
+        StringBuilder actors = new StringBuilder();
+
+        for (Movie movie : movies) {
+            if (movie.getGenreList() != null) {
+                genres.append(String.join(",", movie.getGenreList())).append(",");
+            }
+            if (movie.getDirectorName() != null) {
+                directors.append(String.join(",", movie.getDirectorName())).append(",");
+            }
+            if (movie.getCastsList() != null) {
+                actors.append(String.join(",", movie.getCastsList())).append(",");
+            }
+        }
+        String genreStr = !genres.isEmpty() ? genres.substring(0, genres.length() - 1) : "";
+        String directorStr =
+                !directors.isEmpty() ? directors.substring(0, directors.length() - 1) : "";
+        String actorStr = !actors.isEmpty() ? actors.substring(0, actors.length() - 1) : "";
+
+        return "장르: " + genreStr + "\n감독: " + directorStr + "\n배우: " + actorStr;
+    }
+
+    private List<String> parseKeywords(String llmResponse) {
+        if (llmResponse == null || llmResponse.isEmpty()) {
+            return List.of();
+        }
+        // "content=" 이후부터 닫는 중괄호 '}' 직전까지의 모든 문자를 캡처합니다.
+        Pattern pattern = Pattern.compile("content=([^}]+)");
+        Matcher matcher = pattern.matcher(llmResponse);
+        String content = "";
+        if (matcher.find()) {
+            content = matcher.group(1).trim();
+        }
+        if (content.isEmpty()) {
+            return List.of();
+        }
+        return Arrays.stream(content.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .limit(5)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public MovieInfoResponseList searchMovies(String keyword, int limit, int offset) {
         List<Object[]> results = movieRepository.searchMovies(keyword, limit, offset);
+
         int totalCnt = movieRepository.searchMoviesTotalCnt(keyword);
 
+        List<BasicMovieInfoResponse> responses = getBasicMovieInfoResponses(results);
+
+        if (!responses.isEmpty()) {
+            String movieListStr =
+                    responses.stream()
+                            .map(BasicMovieInfoResponse::title)
+                            .collect(Collectors.joining(", "));
+
+            Member currentMember = memberUtil.getCurrentMember();
+            List<MoviePreference> preferences =
+                    moviePreferenceRepository.findTop10ByMemberIdOrderByCreatedDtDesc(
+                            currentMember.getId());
+            List<Movie> likedMovies =
+                    preferences.stream()
+                            .map(
+                                    pref ->
+                                            movieRepository
+                                                    .findById(pref.getMovie().getId())
+                                                    .orElseThrow(
+                                                            () ->
+                                                                    new CustomException(
+                                                                            ErrorCode
+                                                                                    .MOVIE_NOT_FOUND)))
+                            .collect(Collectors.toList());
+
+            String preferenceData = buildPreferenceData(likedMovies);
+
+            String rankingPrompt =
+                    promptService.getMovieRankingPrompt(movieListStr, preferenceData);
+
+            String rankingResult = llmService.callLLM(rankingPrompt);
+
+            List<String> orderedTitles = parseRankingResult(rankingResult);
+
+            Map<String, BasicMovieInfoResponse> titleToResponse =
+                    responses.stream()
+                            .collect(
+                                    Collectors.toMap(
+                                            BasicMovieInfoResponse::title, Function.identity()));
+            List<BasicMovieInfoResponse> sortedResponses = new ArrayList<>();
+            for (String title : orderedTitles) {
+                BasicMovieInfoResponse response = titleToResponse.get(title);
+                if (response != null) {
+                    sortedResponses.add(response);
+                }
+            }
+            for (BasicMovieInfoResponse response : responses) {
+                if (!orderedTitles.contains(response.title())) {
+                    sortedResponses.add(response);
+                }
+            }
+            responses = sortedResponses;
+        }
+
+        return new MovieInfoResponseList(responses, limit, offset, totalCnt);
+    }
+
+    private static List<BasicMovieInfoResponse> getBasicMovieInfoResponses(List<Object[]> results) {
         List<BasicMovieInfoResponse> responses = new ArrayList<>();
         for (Object[] result : results) {
             Long id = (Long) result[0];
@@ -183,6 +356,25 @@ public class MovieService {
                     new BasicMovieInfoResponse(id, title, posterImageUrl, genreList, releaseDate);
             responses.add(response);
         }
-        return new MovieInfoResponseList(responses, limit, offset, totalCnt);
+        return responses;
+    }
+
+    private List<String> parseRankingResult(String rankingResult) {
+        List<String> orderedTitles = new ArrayList<>();
+        if (rankingResult == null || rankingResult.isEmpty()) {
+            return orderedTitles;
+        }
+        String[] lines = rankingResult.split("\n");
+        for (String line : lines) {
+            line = line.trim();
+            if (line.matches("^\\d+:.*")) {
+                int colonIdx = line.indexOf(":");
+                if (colonIdx != -1 && colonIdx + 1 < line.length()) {
+                    String title = line.substring(colonIdx + 1).trim();
+                    orderedTitles.add(title);
+                }
+            }
+        }
+        return orderedTitles;
     }
 }
