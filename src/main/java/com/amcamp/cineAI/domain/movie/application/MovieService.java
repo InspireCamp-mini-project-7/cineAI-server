@@ -21,13 +21,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.*;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -200,7 +201,6 @@ public class MovieService {
         String llmResponse = llmService.callLLM(prompt);
 
         List<String> keywords = parseKeywords(llmResponse);
-        System.out.println("Generated Keywords: " + keywords);
 
         if (keywords.isEmpty()) {
             throw new CustomException(ErrorCode.SEARCH_KEYWORD_NOT_FOUND);
@@ -263,11 +263,70 @@ public class MovieService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public MovieInfoResponseList searchMovies(String keyword, int limit, int offset) {
-
         List<Object[]> results = movieRepository.searchMovies(keyword, limit, offset);
+
         int totalCnt = movieRepository.searchMoviesTotalCnt(keyword);
 
+        List<BasicMovieInfoResponse> responses = getBasicMovieInfoResponses(results);
+
+        if (!responses.isEmpty()) {
+            String movieListStr =
+                    responses.stream()
+                            .map(BasicMovieInfoResponse::title)
+                            .collect(Collectors.joining(", "));
+
+            Member currentMember = memberUtil.getCurrentMember();
+            List<MoviePreference> preferences =
+                    moviePreferenceRepository.findTop10ByMemberIdOrderByCreatedDtDesc(
+                            currentMember.getId());
+            List<Movie> likedMovies =
+                    preferences.stream()
+                            .map(
+                                    pref ->
+                                            movieRepository
+                                                    .findById(pref.getMovie().getId())
+                                                    .orElseThrow(
+                                                            () ->
+                                                                    new CustomException(
+                                                                            ErrorCode
+                                                                                    .MOVIE_NOT_FOUND)))
+                            .collect(Collectors.toList());
+
+            String preferenceData = buildPreferenceData(likedMovies);
+
+            String rankingPrompt =
+                    promptService.getMovieRankingPrompt(movieListStr, preferenceData);
+
+            String rankingResult = llmService.callLLM(rankingPrompt);
+
+            List<String> orderedTitles = parseRankingResult(rankingResult);
+
+            Map<String, BasicMovieInfoResponse> titleToResponse =
+                    responses.stream()
+                            .collect(
+                                    Collectors.toMap(
+                                            BasicMovieInfoResponse::title, Function.identity()));
+            List<BasicMovieInfoResponse> sortedResponses = new ArrayList<>();
+            for (String title : orderedTitles) {
+                BasicMovieInfoResponse response = titleToResponse.get(title);
+                if (response != null) {
+                    sortedResponses.add(response);
+                }
+            }
+            for (BasicMovieInfoResponse response : responses) {
+                if (!orderedTitles.contains(response.title())) {
+                    sortedResponses.add(response);
+                }
+            }
+            responses = sortedResponses;
+        }
+
+        return new MovieInfoResponseList(responses, limit, offset, totalCnt);
+    }
+
+    private static List<BasicMovieInfoResponse> getBasicMovieInfoResponses(List<Object[]> results) {
         List<BasicMovieInfoResponse> responses = new ArrayList<>();
         for (Object[] result : results) {
             Long id = (Long) result[0];
@@ -281,6 +340,25 @@ public class MovieService {
                     new BasicMovieInfoResponse(id, title, posterImageUrl, genreList, releaseDate);
             responses.add(response);
         }
-        return new MovieInfoResponseList(responses, limit, offset, totalCnt);
+        return responses;
+    }
+
+    private List<String> parseRankingResult(String rankingResult) {
+        List<String> orderedTitles = new ArrayList<>();
+        if (rankingResult == null || rankingResult.isEmpty()) {
+            return orderedTitles;
+        }
+        String[] lines = rankingResult.split("\n");
+        for (String line : lines) {
+            line = line.trim();
+            if (line.matches("^\\d+:.*")) {
+                int colonIdx = line.indexOf(":");
+                if (colonIdx != -1 && colonIdx + 1 < line.length()) {
+                    String title = line.substring(colonIdx + 1).trim();
+                    orderedTitles.add(title);
+                }
+            }
+        }
+        return orderedTitles;
     }
 }
