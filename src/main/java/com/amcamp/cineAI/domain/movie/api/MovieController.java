@@ -111,6 +111,20 @@ public class MovieController {
         }
     }
 
+    @Operation(
+            summary = "영화 추천",
+            description = "현재 로그인한 회원의 선호 정보를 가져와 LLM을 호출하여 검색어 생성, 생성된 검색어로 DB에서 영화 정보 조회")
+    @GetMapping("/todays")
+    public ResponseEntity<Slice<BasicMovieInfoResponse>> getTodaysMovies(
+            @Parameter(description = "이전 페이지의 마지막 영화 ID (첫 페이지는 비워두세요)")
+                    @RequestParam(required = false)
+                    Long lastMovieId,
+            @RequestParam(value = "size", defaultValue = "3") int pageSize) {
+        Slice<BasicMovieInfoResponse> response =
+                movieService.getTodaysMoviePreferences(lastMovieId, pageSize);
+        return ResponseEntity.ok().body(response);
+    }
+  
     @Operation(summary = "영화 포스터 다운로드", description = "영화 포스터를 다운로드합니다.")
     @GetMapping("{movieId}/poster")
     public ResponseEntity<Resource> moviePosterDownload(@PathVariable Long movieId) {
