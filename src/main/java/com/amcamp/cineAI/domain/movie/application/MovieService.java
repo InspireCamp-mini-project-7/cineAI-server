@@ -28,6 +28,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
@@ -197,10 +199,14 @@ public class MovieService {
                         .collect(Collectors.toList());
 
         String preferenceData = buildPreferenceData(likedMovies);
+        System.out.println(preferenceData);
         String prompt = promptService.getMovieSearchPrompt(preferenceData);
+        System.out.println(prompt);
         String llmResponse = llmService.callLLM(prompt);
+        System.out.println(llmResponse);
 
         List<String> keywords = parseKeywords(llmResponse);
+        System.out.println(keywords);
 
         if (keywords.isEmpty()) {
             throw new CustomException(ErrorCode.SEARCH_KEYWORD_NOT_FOUND);
@@ -256,10 +262,20 @@ public class MovieService {
         if (llmResponse == null || llmResponse.isEmpty()) {
             return List.of();
         }
-        return Arrays.stream(llmResponse.split(","))
+        // "content=" 이후부터 닫는 중괄호 '}' 직전까지의 모든 문자를 캡처합니다.
+        Pattern pattern = Pattern.compile("content=([^}]+)");
+        Matcher matcher = pattern.matcher(llmResponse);
+        String content = "";
+        if (matcher.find()) {
+            content = matcher.group(1).trim();
+        }
+        if (content.isEmpty()) {
+            return List.of();
+        }
+        return Arrays.stream(content.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
-                .limit(3)
+                .limit(5)
                 .collect(Collectors.toList());
     }
 
