@@ -1,4 +1,4 @@
-package com.amcamp.cineAI.infra.config;
+package com.amcamp.cineAI.infra.config.Aws;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

@@ -50,7 +50,7 @@ public class FileUtils {
             throw new CustomException(ErrorCode.FILE_UPLOAD_FAIL);
         }
 
-        return s3Key;
+        return getFileUrl(storeFileName);
     }
 
     private String createStoreFileName(String originalFilename) {

@@ -119,15 +119,11 @@ public class MovieController {
                         .orElseThrow(() -> new CustomException(ErrorCode.MOVIE_NOT_FOUND));
         String posterImageUrl = movie.getPosterImageUrl();
         String title = movie.getTitle();
-        MovieStatus status = movie.getStatus();
-        String fileExtension = fileUtils.extractExt(posterImageUrl);
 
         try {
-            if (status.equals(MovieStatus.CREATED)) {
-                posterImageUrl = fileUtils.generatePresignedUrl(posterImageUrl);
-            }
             InputStream imageInputStream = fileUtils.getImageInputStream(posterImageUrl);
 
+            String fileExtension = fileUtils.extractExt(posterImageUrl);
             String contentType = "image/" + fileExtension; // 이미지의 Content-Type 설정
 
             // 파일 이름 인코딩
