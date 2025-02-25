@@ -3,7 +3,6 @@ package com.amcamp.cineAI.domain.movie.api;
 import com.amcamp.cineAI.domain.movie.application.MovieService;
 import com.amcamp.cineAI.domain.movie.dao.MovieRepository;
 import com.amcamp.cineAI.domain.movie.domain.Movie;
-import com.amcamp.cineAI.domain.movie.domain.MovieStatus;
 import com.amcamp.cineAI.domain.movie.dto.request.MovieCreateForm;
 import com.amcamp.cineAI.domain.movie.dto.request.NewMovieCreateRequest;
 import com.amcamp.cineAI.domain.movie.dto.response.BasicMovieInfoResponse;
@@ -123,7 +122,7 @@ public class MovieController {
                 movieService.getTodaysMoviePreferences(lastMovieId, pageSize);
         return ResponseEntity.ok().body(response);
     }
-  
+
     @Operation(summary = "영화 포스터 다운로드", description = "영화 포스터를 다운로드합니다.")
     @GetMapping("{movieId}/poster")
     public ResponseEntity<Resource> moviePosterDownload(@PathVariable Long movieId) {
