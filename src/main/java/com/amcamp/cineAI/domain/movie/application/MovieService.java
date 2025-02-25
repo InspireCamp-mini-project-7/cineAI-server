@@ -9,6 +9,7 @@ import com.amcamp.cineAI.domain.movie.dao.MovieRepository;
 import com.amcamp.cineAI.domain.movie.domain.Movie;
 import com.amcamp.cineAI.domain.movie.domain.MovieLikedStatus;
 import com.amcamp.cineAI.domain.movie.domain.MoviePreference;
+import com.amcamp.cineAI.domain.movie.domain.MovieStatus;
 import com.amcamp.cineAI.domain.movie.dto.request.NewMovieCreateRequest;
 import com.amcamp.cineAI.domain.movie.dto.response.BasicMovieInfoResponse;
 import com.amcamp.cineAI.domain.movie.dto.response.MovieInfoResponse;
@@ -119,9 +120,10 @@ public class MovieService {
         return movies;
     }
 
+    @Transactional
     public void uploadCSV() throws IOException {
         List<Movie> movies = parseCSV();
-
+        movieRepository.deleteByStatus(MovieStatus.NORMAL);
         movieRepository.saveAll(movies);
     }
 

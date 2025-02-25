@@ -1,8 +1,11 @@
 package com.amcamp.cineAI.domain.movie.dao;
 
 import com.amcamp.cineAI.domain.movie.domain.Movie;
+import com.amcamp.cineAI.domain.movie.domain.MovieStatus;
+import jakarta.transaction.Transactional;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -35,4 +38,9 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, MovieReposi
                             + "OR LOWER(CAST(m.DIRECTOR_NAME AS VARCHAR)) LIKE LOWER(CONCAT('%', :keyword, '%')) ",
             nativeQuery = true)
     int searchMoviesTotalCnt(String keyword);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Movie m WHERE m.status = :status")
+    void deleteByStatus(@Param("status") MovieStatus status);
 }
