@@ -56,8 +56,8 @@ public class MovieService {
     private final FileUtils fileUtils;
 
     public void createMovie(NewMovieCreateRequest request, MultipartFile posterFile) {
-        String storeFileName = fileUtils.uploadFile(posterFile);
-        request = request.withPosterImageUrl(storeFileName);
+        String posterImageUrl = fileUtils.uploadFile(posterFile);
+        request = request.withPosterImageUrl(posterImageUrl);
         Movie newMovie = Movie.createMovie(request);
         movieRepository.save(newMovie);
     }
