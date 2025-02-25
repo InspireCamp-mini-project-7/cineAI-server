@@ -9,6 +9,7 @@ import com.amcamp.cineAI.domain.auth.dto.response.ProfileInfoResponse;
 import com.amcamp.cineAI.domain.auth.dto.response.SocialLoginResponse;
 import com.amcamp.cineAI.domain.member.dao.MemberRepository;
 import com.amcamp.cineAI.domain.member.domain.Member;
+import com.amcamp.cineAI.domain.member.domain.MemberStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,10 @@ public class AuthService {
                         .findByEmail(email)
                         .orElseGet(() -> saveMember(profileInfoResponse));
         LoginStatus loginStatus = isFirstLogin ? LoginStatus.FIRST : LoginStatus.NOTFIRST;
+
+        if (member.getStatus() == MemberStatus.DELETED) {
+            member.reEnroll();
+        }
 
         RefreshToken refreshToken =
                 RefreshToken.createRefreshToken(member.getId(), response.refreshToken());
